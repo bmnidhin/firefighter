@@ -1,4 +1,5 @@
 # Import required packages
+from tkinter import image_names
 import urllib.request
 import cv2
 import numpy as np
@@ -25,8 +26,8 @@ rekog_client = boto3.client("rekognition")
 dev = True
 isKinesis = False
 isIoTMessaging = False
-url = ''
-ipCamera = False
+url = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'
+ipCamera = True
 camera_index = 0 # 0 is usually the built-in webcam
 capture_rate = 30 # Frame capture rate.. every X frames. Positive integer.
 rekog_max_labels = 123
@@ -66,22 +67,22 @@ parser.add_argument('--enableEdgeTPU',help='Whether to run the model on EdgeTPU.
 
 
 args = parser.parse_args()
-host = args.host
-rootCAPath = args.rootCAPath
-certificatePath = args.certificatePath
-privateKeyPath = args.privateKeyPath
-port = args.port
-useWebsocket = args.useWebsocket
-clientId = args.clientId
-topic = args.topic
-model = args.model
-camera_id = int(args.cameraId)
-width = args.frameWidth
-height = args.frameHeight
-num_threads=  int(args.numThreads)
-enable_edgetpu = bool(args.enableEdgeTPU)
+host = 'a3fnw75gmb7w4v-ats.iot.us-west-2.amazonaws.com'
+rootCAPath = 'root-CA.crt'
+certificatePath = 'cctv-primary.cert.pem'
+privateKeyPath = 'cctv-primary.private.key'
+port = 883
+useWebsocket = False
+clientId = "basicPubSub"
+topic = "sdk/test/Python"
+model = 'efficientdet_lite0.tflite'
+camera_id = 0
+width =640
+height = 480
+num_threads=  4
+enable_edgetpu = False
 
-if args.mode not in AllowedActions:
+""" if args.mode not in AllowedActions:
     parser.error("Unknown --mode option %s. Must be one of %s" % (args.mode, str(AllowedActions)))
     exit(2)
 
@@ -97,7 +98,7 @@ if not args.useWebsocket and (not args.certificatePath or not args.privateKeyPat
 if args.useWebsocket and not args.port:  # When no port override for WebSocket, default to 443
     port = 443
 if not args.useWebsocket and not args.port:  # When no port override for non-WebSocket, default to 8883
-    port = 8883
+    port = 8883 """
 
 # Configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -128,7 +129,6 @@ myAWSIoTMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 # Connect IoT Hub and send/Receive required message
 # select source of video
 # Get Image from IP Cam
-cv2.namedWindow("Feed", cv2.WINDOW_AUTOSIZE)
 
 # Get image from saved video
 # Predict with model
@@ -200,14 +200,15 @@ def main():
     start_time = time.time()
 
     # Start capturing video input from the camera
-    cap = cv2.VideoCapture(camera_id)
     if ipCamera:
-         imgResponse=urllib.request.urlopen(url) #connect with ipcamera
-         cap = np.array(bytearray(imgResponse.read()), dtype=np.uint8)
+         #imgResponse=urllib.request.urlopen(url) #connect with ipcamera
+         cap = cv2.VideoCapture(url)
+         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     else:
         cap = cv2.VideoCapture(camera_id)     
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
     # Visualization parameters
     row_size = 20  # pixels
@@ -230,51 +231,80 @@ def main():
     if argv_len > 1 and sys.argv[1].isdigit():
         capture_rate = int(sys.argv[1])
     pool = Pool(processes=3)
-
+    bytes = b''
     frame_count = 0
     while True:
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-        #cv2.resize(frame, (640, 360));
-        # Image detection start
-        counter += 1
-        image = cv2.flip(image, 1)
+        frame_jpg = b''
 
-        # Run object detection estimation using the model.
-        detections = detector.detect(image)
+        #bytes += imgResponse.read(16384*2)
+        #b = bytes.rfind(b'\xff\xd9')
+        #a = bytes.rfind(b'\xff\xd8', 0, b-1)
+        a= True
+        b= True
 
-        # Draw keypoints and edges on input image
-        image = utils.visualize(image, detections)
+        if a != -1 and b != -1:
+            #print 'Found JPEG markers. Start {}, End {}'.format(a,b)
+            
+            frame_jpg_bytes = bytes[a:b+2]
+            bytes = bytes[b+2:]
 
-        # Calculate the FPS
-        if counter % fps_avg_frame_count == 0:
-            end_time = time.time()
-            fps = fps_avg_frame_count / (end_time - start_time)
-            start_time = time.time()
+            if frame_count % capture_rate == 0:
+                
+                #You can perform any image pre-processing here using OpenCV2.
+                #Rotating image 90 degrees to the left:
+                #nparr = np.fromstring(frame_jpg_bytes, dtype=np.uint8)
+                
+                #Rotate 90 degrees counterclockwise
+                #img_cv2_mat = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                #rotated_img = cv2.rotate(img_cv2_mat, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                
+                #retval, frame = cv2.imencode(".jpg", rotated_img)
 
-        # Show the FPS
-        fps_text = 'FPS = {:.1f}'.format(fps)
-        text_location = (left_margin, row_size)
-        cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
-                    font_size, text_color, font_thickness)
-        #Image detection end
-        if ret is False:
-            break
+                # Image detection start
+                counter += 1
+                success, image = cap.read()
 
-        if frame_count % capture_rate == 0 and False:
-            result = pool.apply_async(encode_and_send_frame, (frame, frame_count, True, False, False,))
+                # Run object detection estimation using the model.
+                if image is not None:
+                    # Display the resulting frame
+                    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+                    print('hi') 
+                    detections = detector.detect(image)
+                    print(detections,'detections is detections')
+                    # Draw keypoints and edges on input image
+                    image = utils.visualize(image, detections)
 
-        frame_count += 1
+                    # Calculate the FPS
+                    if counter % fps_avg_frame_count == 0:
+                        end_time = time.time()
+                        fps = fps_avg_frame_count / (end_time - start_time)
+                        start_time = time.time()
 
-        # Receive messages from topic
-        if args.mode == 'both' or args.mode == 'subscribe':
-           myAWSIoTMQTTClient.subscribe(topic, 1, customCallback)
-        time.sleep(2)
+                    # Show the FPS
+                    fps_text = 'FPS = {:.1f}'.format(fps)
+                    text_location = (left_margin, row_size)
+                    cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
+                                font_size, text_color, font_thickness)
+                    cv2.imshow('frame',image)           
+                    #Image detection end 
+                    #Send to Kinesis
+                    if frame_count % capture_rate == 0 and False:
+                       result = pool.apply_async(encode_and_send_frame, (frame, frame_count, True, False, False,))
 
-        # Display the resulting frame
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+       
+                else:
+                    print ("Frame is None")
+             
+                # Receive messages from topic
+                if False:
+                  myAWSIoTMQTTClient.subscribe(topic, 1, customCallback)
+                time.sleep(2)
+
+                # Display the resulting frame
+                # cv2.imshow('frame', image)
+                # cv2.waitKey(1) 
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
     # When everything done, release the capture
     cap.release()
