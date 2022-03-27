@@ -26,7 +26,7 @@ rekog_client = boto3.client("rekognition")
 dev = True
 isKinesis = False
 isIoTMessaging = False
-url = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'
+url = './fire.mp4'
 ipCamera = True
 camera_index = 0 # 0 is usually the built-in webcam
 capture_rate = 30 # Frame capture rate.. every X frames. Positive integer.
@@ -267,8 +267,7 @@ def main():
                 # Run object detection estimation using the model.
                 if image is not None:
                     # Display the resulting frame
-                    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-                    print('hi') 
+                    #image = cv2.imdecode(image, cv2.IMREAD_COLOR) 
                     detections = detector.detect(image)
                     print(detections,'detections is detections')
                     # Draw keypoints and edges on input image
@@ -285,11 +284,12 @@ def main():
                     text_location = (left_margin, row_size)
                     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                                 font_size, text_color, font_thickness)
-                    cv2.imshow('frame',image)           
+                    #cv2.imshow('frame',image)           
                     #Image detection end 
                     #Send to Kinesis
-                    if frame_count % capture_rate == 0 and False:
-                       result = pool.apply_async(encode_and_send_frame, (frame, frame_count, True, False, False,))
+                    if frame_count % capture_rate == 0 and isKinesis:
+                       result = pool.apply_async(encode_and_send_frame, (image, frame_count, True, False, False,))
+                       print(result)
 
        
                 else:

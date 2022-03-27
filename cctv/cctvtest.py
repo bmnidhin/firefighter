@@ -1,7 +1,7 @@
 import cv2
 
 #print("Before URL")
-cap = cv2.VideoCapture('https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4')
+cap = cv2.VideoCapture('./fire.mp4')
 #print("After URL")
 
 while True:
