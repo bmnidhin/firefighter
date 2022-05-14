@@ -1,7 +1,7 @@
 import cv2
 
 #print("Before URL")
-cap = cv2.VideoCapture('./fire.mp4')
+cap = cv2.VideoCapture(0)
 #print("After URL")
 
 while True:

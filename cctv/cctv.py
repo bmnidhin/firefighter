@@ -14,9 +14,10 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import logging
 import argparse
 import json
-from object_detector import ObjectDetector
-from object_detector import ObjectDetectorOptions
-import utils
+if False:
+    from object_detector import ObjectDetector
+    from object_detector import ObjectDetectorOptions
+    import utils
 
 kinesis_client = boto3.client("kinesis")
 rekog_client = boto3.client("rekognition")
@@ -24,10 +25,10 @@ rekog_client = boto3.client("rekognition")
 
 ####################### Setup Start ####################################################
 dev = True
-isKinesis = False
+isKinesis = True
 isIoTMessaging = False
 url = './fire.mp4'
-ipCamera = True
+ipCamera = False
 camera_index = 0 # 0 is usually the built-in webcam
 capture_rate = 30 # Frame capture rate.. every X frames. Positive integer.
 rekog_max_labels = 123
@@ -67,16 +68,17 @@ parser.add_argument('--enableEdgeTPU',help='Whether to run the model on EdgeTPU.
 
 
 args = parser.parse_args()
+isRaspberry = False
 host = 'a3fnw75gmb7w4v-ats.iot.us-west-2.amazonaws.com'
 rootCAPath = 'root-CA.crt'
-certificatePath = 'cctv-primary.cert.pem'
-privateKeyPath = 'cctv-primary.private.key'
+certificatePath = './keys/dell2.cert.pem'
+privateKeyPath = './keys/dell2.private.key'
 port = 883
 useWebsocket = False
 clientId = "basicPubSub"
 topic = "sdk/test/Python"
 model = 'efficientdet_lite0.tflite'
-camera_id = 0
+camera_id = 'dell2'
 width =640
 height = 480
 num_threads=  4
@@ -134,7 +136,7 @@ myAWSIoTMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 # Predict with model
 # Send to Kinesis
 #Send frame to Kinesis stream
-def encode_and_send_frame(frame, frame_count, enable_kinesis=True, enable_rekog=False, write_file=False):
+def encode_and_send_frame(frame, frame_count, cameraId, cameraLocation, enable_kinesis=True, enable_rekog=False, write_file=False):
     try:
         #convert opencv Mat to jpg image
         #print "----FRAME---"
@@ -146,9 +148,11 @@ def encode_and_send_frame(frame, frame_count, enable_kinesis=True, enable_rekog=
         now_ts_utc = (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)).total_seconds()
 
         frame_package = {
-            'ApproximateCaptureTime' : now_ts_utc,
+            'ApproximateCaptureTime' : 'steven grant',
             'FrameCount' : frame_count,
-            'ImageBytes' : img_bytes
+            'CameraId': cameraId,
+            'CameraLocation': cameraLocation,
+            'ImageBytes' : img_bytes           
         }
 
         if write_file:
@@ -206,7 +210,7 @@ def main():
          cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
          cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     else:
-        cap = cv2.VideoCapture(camera_id)     
+        cap = cv2.VideoCapture(camera_index)     
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
@@ -219,13 +223,14 @@ def main():
     fps_avg_frame_count = 10
 
     # Initialize the object detection model
-    options = ObjectDetectorOptions(
-        num_threads=num_threads,
-        score_threshold=0.3,
-        max_results=3,
-        enable_edgetpu=enable_edgetpu)
+    if isRaspberry:
+        options = ObjectDetectorOptions(
+            num_threads=num_threads,
+            score_threshold=0.3,
+            max_results=3,
+            enable_edgetpu=enable_edgetpu)
         
-    detector = ObjectDetector(model_path=model, options=options)
+        detector = ObjectDetector(model_path=model, options=options)
     argv_len = len(sys.argv)
     capture_rate = 30
     if argv_len > 1 and sys.argv[1].isdigit():
@@ -268,10 +273,11 @@ def main():
                 if image is not None:
                     # Display the resulting frame
                     #image = cv2.imdecode(image, cv2.IMREAD_COLOR) 
-                    detections = detector.detect(image)
-                    print(detections,'detections is detections')
-                    # Draw keypoints and edges on input image
-                    image = utils.visualize(image, detections)
+                    if isRaspberry:
+                      detections = detector.detect(image)
+                      print(detections,'detections is detections')
+                      # Draw keypoints and edges on input image
+                      image = utils.visualize(image, detections)
 
                     # Calculate the FPS
                     if counter % fps_avg_frame_count == 0:
@@ -284,12 +290,12 @@ def main():
                     text_location = (left_margin, row_size)
                     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                                 font_size, text_color, font_thickness)
-                    #cv2.imshow('frame',image)           
+                    cv2.imshow('frame',image)           
                     #Image detection end 
                     #Send to Kinesis
                     if frame_count % capture_rate == 0 and isKinesis:
-                       result = pool.apply_async(encode_and_send_frame, (image, frame_count, True, False, False,))
-                       print(result)
+                       result = pool.apply_async(encode_and_send_frame, (image, frame_count,'dell-pc','tvm',True,False, False,))
+                       print(result, 'result is result')	
 
        
                 else:

@@ -11,12 +11,6 @@ urllib3==1.26.9
 absl-py==1.0.0
 flatbuffers==1.12
 pybind11==2.9.1
-tflite-runtime==2.7.0
-tflite-support==0.3.1
+#tflite-runtime==2.7.0
+#tflite-support==0.3.1
 python-dateutil==2.8.2
-
-
-
-
-
-
