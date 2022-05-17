@@ -1,35 +1,44 @@
 
 # Camera Client
 
-- [] Capature wit camera
-- [] Capture with ipcamera
+- [x] Capature with camera
+- [x] Capture with ipcamera
 - [] Detect fire
 - [] Detect Class of fire
-- [] send frames to kinesis
+- [x] send frames to kinesis
 - [] send cameraid to Kinesis
-- [] distress call to IoT Hub {cameraID, classOfFire,location }
+- [x] distress call to IoT Hub {cameraID, classOfFire,location }
+- [] send HTTP req to central hub
+
+
+# Raspi Camera Client
+
+- [x] Capature with camera
+- [x] Capture with ipcamera
+- [] Detect fire
+- [] Detect Class of fire
+- [x] send frames to kinesis
+- [] send cameraid to Kinesis
+- [x] distress call to IoT Hub {cameraID, classOfFire,location }
 - [] send HTTP req to central hub
 
 # Frame Processor
 - [] Get cameraid from metadata
-- [] process frames and detect labels
+- [x] process frames and detect labels
 - [] send distress call with cameraId, class and Location
-- [] save image to s3
-- [] Save image data to DynamoDB
+- [x] save image to s3
+- [x] Save image data to DynamoDB
 
 # Vehicle Client
+- [] POST new fire
+- [] GET all fire prone areas
+- [] Get ongoing actions
 - [] Receive Distress calls
 - [] display distress reception
 - [] Display route calculation
 
-# Central Hub
-- [] POST new fire
-- [] GET all fire prone areas
-- [] Get ongoing actions
-
 # Dashboard
-
-- [] Display frames
+- [x] Display frames
 - [] Display Fire
 - [] List Ongoing actions
 - [] Display route
