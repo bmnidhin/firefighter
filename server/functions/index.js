@@ -19,7 +19,7 @@ app.post("/fire", async (req, res) => {
   const status = req.body.status;
   const location = req.body.location;
   const timestamp = FieldValue.serverTimestamp();
-  const sender = req.body.sender || "camera";
+  const sender = req.body.sender || "camera"; // sender id
   const classOfFire = req.body.class || "";
 
   let fireRef = db.collection("fire").doc();

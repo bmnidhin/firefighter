@@ -42,7 +42,7 @@ export default function CustomAppBar() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Photos
+            Fire Dashboard
           </Typography>
            fff
             <div>
