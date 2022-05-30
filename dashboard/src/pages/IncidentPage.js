@@ -13,10 +13,10 @@ export default function IncidentPage(props) {
     <div style={{margin:'30px'}}>
         <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
-        <Grid item xs={8}>
+        <Grid item xs={12} sm={8} md={8}>
           <NavmapView id= {id}/>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={12} sm={4} md={4}>
          <IncidentLogs/>
          <GetCameraFeedId id={'dell2'}/>
         </Grid>
