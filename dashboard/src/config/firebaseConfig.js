@@ -1,11 +1,5 @@
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/firestore";
-import "firebase/storage";
-import "firebase/messaging";
-import "firebase/remote-config";
-import "firebase/app-check";
-import "firebase/functions";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCpx-9cASQi1I4aUPGPw-f6an3ujpfrQZw",
@@ -17,16 +11,16 @@ const firebaseConfig = {
     measurementId: "G-Q1FJHWYFML"
 };
 
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 // const appCheck = firebase.appCheck();
 // Pass your reCAPTCHA v3 site key (public key) to activate(). Make sure this
 // key is the counterpart to the secret key you set in the Firebase console.
 // appCheck.activate('6LchRbobAAAAABNv78_FAUlC4r7mW_vjl7Qo6AzI')
-if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-  firebase.firestore().useEmulator("localhost", 8080);
-  firebase.storage().useEmulator("localhost", 9199);
-  firebase.functions().useEmulator("localhost", 5001);
-}
+// if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+//   firebase.firestore().useEmulator("localhost", 8080);
+//   firebase.storage().useEmulator("localhost", 9199);
+//   firebase.functions().useEmulator("localhost", 5001);
+// }
 
 // firebase
 //   .firestore()
@@ -41,12 +35,14 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 //       // ...
 //     }
 //   });
-export const fire = firebase;
-export const auth = firebase.auth();
-// const messaging = firebase.messaging();
-export const firestore = firebase.firestore();
-export const FieldValue = firebase.firestore.FieldValue;
-export const storage = firebase.storage().ref();
+export const db = getFirestore(app);
+
+// export const fire = firebase;
+// // export const auth = firebase.auth();
+// // const messaging = firebase.messaging();
+// export const firestore = firebase.firestore();
+// export const FieldValue = firebase.firestore.FieldValue;
+// export const storage = firebase.storage().ref();
 // export const remoteConfig = firebase.remoteConfig();
 
 

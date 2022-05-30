@@ -27,15 +27,7 @@ rekog_client = boto3.client("rekognition")
 
 
 ####################### Setup Start ####################################################
-dev = True
-isKinesis = False
-isIoTMessaging = False
-url = './fire.mp4'
-ipCamera = False
-camera_index = 0  # 0 is usually the built-in webcam
-capture_rate = 30  # Frame capture rate.. every X frames. Positive integer.
-rekog_max_labels = 123
-rekog_min_conf = 50.0
+
 
 ####################### Setup end ####################################################
 AllowedActions = ['both', 'publish', 'subscribe']
@@ -90,6 +82,15 @@ parser.add_argument('--enableEdgeTPU', help='Whether to run the model on EdgeTPU
 
 
 args = parser.parse_args()
+dev = True
+isKinesis = True
+isIoTMessaging = False
+url = './fire.mp4'
+ipCamera = False
+camera_index = 0  # 0 is usually the built-in webcam
+capture_rate = 1  # Frame capture rate.. every X frames. Positive integer.
+rekog_max_labels = 123
+rekog_min_conf = 50.0
 isRaspberry = False
 host = 'a3fnw75gmb7w4v-ats.iot.us-west-2.amazonaws.com'
 rootCAPath = './keys/root-CA.crt'
@@ -106,12 +107,9 @@ width = 224
 height = 224
 num_threads = 4
 enable_edgetpu = False
-url = 'https://postman-echo.com/post'
-responseUrl = 'https://postman-echo.com/get?foo1=bar1&foo2=bar2'
-isRescuceOn = False
-numberOfDistressCalls = 0
-isRescueEnded = False
-incidentNumber = 0
+url = 'https://us-central1-firefighter-cf.cloudfunctions.net/widgets/fire'
+responseUrl = 'https://us-central1-firefighter-cf.cloudfunctions.net/widgets/fire/'
+
 
 
 """ if args.mode not in AllowedActions:
@@ -187,7 +185,7 @@ def encode_and_send_frame(frame, frame_count, cameraId, cameraLocation, enable_k
                       1, tzinfo=pytz.utc)).total_seconds()
 
         frame_package = {
-            'ApproximateCaptureTime': 'steven grant',
+            'ApproximateCaptureTime': now_ts_utc,
             'FrameCount': frame_count,
             'CameraId': cameraId,
             'CameraLocation': cameraLocation,
@@ -316,6 +314,10 @@ def main():
                 counter += 1
                 success, image = cap.read()
                 isRescuceOn = False
+                numberOfDistressCalls = 0
+                isRescueEnded = False
+                incidentNumber = 0
+
                 # Run object detection estimation using the model.
                 if image is not None:
                     # Display the resulting frame
@@ -332,30 +334,37 @@ def main():
                       fire, non_fire = prediction[0]
                       print(fire, "is the probability of fire")
                       if fire > 0.5 and not isRescuceOn:
-                          classDetection = utils.myClassDetector(image)
-                          predictedClassIndex = max(classDetection)
-                          predictedClass = classList[predictedClassIndex]
+                          print("Intiating Alert")
+                          image,predictedClassProb = utils.myClassDetector(image)
+                          predictedClassProb = predictedClassProb
+                          predictedClassProb = predictedClassProb[0].tolist() 
+                        #   predictedClass = max(predictedClassProb)
+                        #   predictedClass = classList[prediction.index(predictedClass)]
 
                           myobj = {
                                 'status': 'fire',  # fire, rescue, closed
                                 'location': [8.919330, 76.633760],
                                 'sender': camera_id,
-                                'classOfFire':  predictedClass
+                                'classOfFire':  str(predictedClassProb)
                               }
+                          print(myobj)    
                           response = requests.post(url, data=myobj)
-                          if (response.status_code == 200):
+                          print(response.json())
+                          if (response):
                              print("The request was a success!")
                              print(response.json())
                              isRescuceOn = True
                              numberOfDistressCalls += 1
+                             incidentNumber = '123'
                              # Code here will only run if the request is successful
                           elif (response.status_code == 404):
                              print("Result not found!")
                              # Code here will react to failed
                     # check status of current operation
                     if isRescuceOn:
-                        res = requests.get(responseUrl)
-                        if (response.status_code == 200):
+                        print("Rescue is on")
+                        res = requests.get(responseUrl+incidentNumber)
+                        if (response):
                             if (res.json()['status'] == 'closed'):
                                 isRescuceOn = False
                                 numberOfDistressCalls = 0
@@ -370,7 +379,7 @@ def main():
                         start_time = time.time()
 
                     # Show the FPS
-                    fps_text = "fire :" + fire 
+                    fps_text = "fire :" + str(fire) 
                     text_location = (left_margin, row_size)
                     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                                 font_size, text_color, font_thickness)
@@ -378,7 +387,7 @@ def main():
                     # Image detection end 
                     # Send to Kinesis
                     if frame_count % capture_rate == 0 and isKinesis:
-                       result = pool.apply_async(encode_and_send_frame, (image, frame_count,'dell-pc','tvm',True,False, False,))
+                       result = pool.apply_async(encode_and_send_frame, (image, frame_count,'dell2','tvm',True,False, False,))
                        print(result, 'result is result')	
 
        

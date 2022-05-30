@@ -8,7 +8,7 @@
 - [x] send frames to kinesis
 - [] send cameraid to Kinesis
 - [x] distress call to IoT Hub {cameraID, classOfFire,location }
-- [] send HTTP req to central hub
+- [x] send HTTP req to central hub
 
 
 # Raspi Camera Client
@@ -20,10 +20,10 @@
 - [x] send frames to kinesis
 - [] send cameraid to Kinesis
 - [x] distress call to IoT Hub {cameraID, classOfFire,location }
-- [] send HTTP req to central hub
+- [x] send HTTP req to central hub
 
 # Frame Processor
-- [] Get cameraid from metadata
+- [-] Get cameraid from metadata
 - [x] process frames and detect labels
 - [] send distress call with cameraId, class and Location
 - [x] save image to s3
