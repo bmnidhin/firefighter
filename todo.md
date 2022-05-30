@@ -3,10 +3,10 @@
 
 - [x] Capature with camera
 - [x] Capture with ipcamera
-- [] Detect fire
+- [x] Detect fire
 - [] Detect Class of fire
 - [x] send frames to kinesis
-- [] send cameraid to Kinesis
+- [x] send cameraid to Kinesis
 - [x] distress call to IoT Hub {cameraID, classOfFire,location }
 - [x] send HTTP req to central hub
 
@@ -23,9 +23,9 @@
 - [x] send HTTP req to central hub
 
 # Frame Processor
-- [-] Get cameraid from metadata
+- [x] Get cameraid from metadata
 - [x] process frames and detect labels
-- [] send distress call with cameraId, class and Location
+- [x] send distress call with cameraId, class and Location
 - [x] save image to s3
 - [x] Save image data to DynamoDB
 
@@ -37,8 +37,12 @@
 - [] display distress reception
 - [] Display route calculation
 
+# Server
+- [x] CURD Fire
+- [] alert vehicle
 # Dashboard
 - [x] Display frames
-- [] Display Fire
-- [] List Ongoing actions
+- [x] Display Fire
+- [x] List Ongoing actions
 - [] Display route
+- [] Mobile View
