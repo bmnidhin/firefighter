@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 import numpy as np
 from object_detector import Detection
-
+import os
 _MARGIN = 10  # pixels
 _ROW_SIZE = 10  # pixels
 _FONT_SIZE = 1
@@ -15,7 +15,7 @@ _TEXT_COLOR = (0, 0, 255)  # red
 
 def myCustomPrediction(image):
   # Load the model
-  model = load_model('./models/keras_model.h5')
+  model = load_model('./models/firedetectornoon.h5')
 
 # Create the array of the right shape to feed into the keras model
 # The 'length' or number of images you can put into the array is
@@ -42,7 +42,7 @@ def myCustomPrediction(image):
 
 def myClassDetector(image):
   # Load the model
-  model = load_model('./models/flower_detector.h5')
+  model = load_model('./models/classifier.h5')
 
 # Create the array of the right shape to feed into the keras model
 # The 'length' or number of images you can put into the array is
@@ -95,3 +95,10 @@ def visualize(
                 _FONT_SIZE, _TEXT_COLOR, _FONT_THICKNESS)
 
   return image
+
+def imageSaver(image,counter):
+    directory = r'D:\Nidhin_Projects\raspi\firefighter\cctv\output'
+    os.chdir(directory)
+    cv2.imwrite("output-"+ str(counter)+".jpg", image)
+    counter += 1
+    return image

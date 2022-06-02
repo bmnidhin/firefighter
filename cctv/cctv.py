@@ -9,6 +9,7 @@ import datetime
 import boto3
 import time
 from multiprocessing import Pool
+from pyparsing import Or
 import pytz
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import logging
@@ -85,7 +86,7 @@ args = parser.parse_args()
 dev = True
 isKinesis = True
 isIoTMessaging = False
-url = './fire.mp4'
+fireUrl = './videos/bus.jpg'
 ipCamera = False
 camera_index = 0  # 0 is usually the built-in webcam
 capture_rate = 1  # Frame capture rate.. every X frames. Positive integer.
@@ -101,7 +102,7 @@ useWebsocket = False
 clientId = "basicPubSub"
 topic = "sdk/test/Python"
 model = 'efficientdet_lite0.tflite'
-classList = ['A', 'B', 'C']
+classList = ['A', 'D', 'C','B','A']
 camera_id = 'dell2'
 width = 224
 height = 224
@@ -255,7 +256,8 @@ def main():
         blackimg.show()  # try to check if you want
         image = cam.getImage()  # this is a real image PIL image
     else:
-        cap = cv2.VideoCapture(camera_index)
+        #cap = cv2.VideoCapture(camera_index)
+        cap = cv2.VideoCapture(fireUrl)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
@@ -317,6 +319,7 @@ def main():
                 numberOfDistressCalls = 0
                 isRescueEnded = False
                 incidentNumber = 0
+                predictedClass = "Non fire"
 
                 # Run object detection estimation using the model.
                 if image is not None:
@@ -333,14 +336,16 @@ def main():
                       image, prediction = utils.myCustomPrediction(image)
                       fire, non_fire = prediction[0]
                       print(fire, "is the probability of fire")
+                      
                       if fire > 0.5 and not isRescuceOn:
                           print("Intiating Alert")
                           image,predictedClassProb = utils.myClassDetector(image)
                           predictedClassProb = predictedClassProb
                           predictedClassProb = predictedClassProb[0].tolist() 
-                        #   predictedClass = max(predictedClassProb)
-                        #   predictedClass = classList[prediction.index(predictedClass)]
-
+                          predictedClass = max(predictedClassProb)
+                          predictedClass = classList[predictedClassProb.index(predictedClass)]
+                          print(predictedClass, "is the predicted class")
+                          print(predictedClassProb, "is the probability of class")
                           myobj = {
                                 'status': 'fire',  # fire, rescue, closed
                                 'location': [8.919330, 76.633760],
@@ -349,10 +354,10 @@ def main():
                               }
                           print(myobj)    
                           response = requests.post(url, data=myobj)
-                          print(response.json())
+                        #   print(response.json())
                           if (response):
                              print("The request was a success!")
-                             print(response.json())
+                             #print(response.json())
                              isRescuceOn = True
                              numberOfDistressCalls += 1
                              incidentNumber = '123'
@@ -364,26 +369,30 @@ def main():
                     if isRescuceOn:
                         print("Rescue is on")
                         res = requests.get(responseUrl+incidentNumber)
-                        if (response):
-                            if (res.json()['status'] == 'closed'):
-                                isRescuceOn = False
-                                numberOfDistressCalls = 0
-                                print("rescue is closed")
-                             # Code here will only run if the request is successful
-                        elif (response.status_code == 404):
-                             print("Result not found!")
+                        # if (response):
+
+                        #     # if (res.json()['status'] == 'closed'):
+                        #     #     isRescuceOn = False
+                        #     #     numberOfDistressCalls = 0
+                        #     #     print("rescue is closed")
+                        #      # Code here will only run if the request is successful
+                        # elif (response.status_code == 404):
+                        #      print("Result not found!")
                     # Calculate the FPS
                     if counter % fps_avg_frame_count == 0:
                         end_time = time.time()
                         fps = fps_avg_frame_count / (end_time - start_time)
                         start_time = time.time()
-
+                    
                     # Show the FPS
-                    fps_text = "fire :" + str(fire) 
+                    fps_text = "fire :" + str(fire) + " , " + predictedClass + " : is the predicted class"
                     text_location = (left_margin, row_size)
                     cv2.putText(image, fps_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                                 font_size, text_color, font_thickness)
-                    cv2.imshow('frame',image)           
+                    cv2.imshow('frame',image) 
+                    end_time = time.time()
+                    # utils.imageSaver(image,end_time)
+                    counter += 1          
                     # Image detection end 
                     # Send to Kinesis
                     if frame_count % capture_rate == 0 and isKinesis:

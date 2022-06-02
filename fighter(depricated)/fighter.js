@@ -33,26 +33,26 @@ function processTest(args) {
    const minimumDelay = 250;
 
    if (args.testMode === 1) {
-      device.subscribe('topic_1');
+      device.subscribe('vehicle/water/1');
    } else {
       device.subscribe('topic_2');
    }
    if ((Math.max(args.delay, minimumDelay)) !== args.delay) {
       console.log('substituting ' + minimumDelay + 'ms delay for ' + args.delay + 'ms...');
    }
-   timeout = setInterval(function() {
-      count++;
+   // timeout = setInterval(function() {
+   //    count++;
 
-      if (args.testMode === 1) {
-         device.publish('topic_2', JSON.stringify({
-            mode1Process: count
-         }));
-      } else {
-         device.publish('topic_1', JSON.stringify({
-            mode2Process: count
-         }));
-      }
-   }, Math.max(args.delay, minimumDelay)); // clip to minimum
+   //    if (args.testMode === 1) {
+   //       device.publish('topic_2', JSON.stringify({
+   //          mode1Process: count
+   //       }));
+   //    } else {
+   //       device.publish('topic_1', JSON.stringify({
+   //          mode2Process: count
+   //       }));
+   //    }
+   // }, Math.max(args.delay, minimumDelay)); // clip to minimum
 
    //
    // Do a simple publish/subscribe demo based on the test-mode passed

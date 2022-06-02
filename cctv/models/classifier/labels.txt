@@ -1,0 +1,5 @@
+0 building
+1 aviation
+2 oilrig
+3 vehicle
+4 wood

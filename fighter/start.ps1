@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# requires: Nodejs/NPM, PowerShell
-# Permission to run PS scripts (for this session only):
-# Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+# requires: Python, PowerShell, Permission to run PS scripts
+# permissions for this PS session only:   Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 
 # exit if cmdlet gives error
 $ErrorActionPreference = "Stop"
@@ -12,12 +11,25 @@ If (!(Test-Path ".\root-CA.crt")) {
     Invoke-WebRequest -Uri https://www.amazontrust.com/repository/AmazonRootCA1.pem -OutFile root-CA.crt
 }
 
-# install AWS Device SDK for NodeJS if not already installed
-node -e "require('aws-iot-device-sdk')"
-If (!($?)) {
+# Check to see if AWS Device SDK for Python exists, download if not
+If (!(Test-Path ".\aws-iot-device-sdk-python")) {
+    "`nCloning the AWS SDK...\n"
+    git clone https://github.com/aws/aws-iot-device-sdk-python
+}
+
+# Check to see if AWS Device SDK for Python is already installed, install if not
+python -c "import AWSIoTPythonSDK"
+if (!($?)) {
     "`nInstalling AWS SDK..."
-    npm install aws-iot-device-sdk
+    cd aws-iot-device-sdk-python
+    pip install AWSIoTPythonSDK
+    $result=$?
+    cd ..
+    if (!$result) {
+        "`nERROR: Failed to install SDK."
+        exit
+    }
 }
 
 "`nRunning pub/sub sample application..."
-node .\fighter.js --host-name a3fnw75gmb7w4v-ats.iot.us-west-2.amazonaws.com --private-key .\fighter.private.key --client-certificate .\fighter.cert.pem --ca-certificate .\root-CA.crt --client-id=sdk-nodejs-e2bf114c-43e1-4ef1-9d56-caa89094006b
+python fighter.py -e a3fnw75gmb7w4v-ats.iot.us-west-2.amazonaws.com -r root-CA.crt -c fighter-win-py-dell.cert.pem -k fighter-win-py-dell.private.key
