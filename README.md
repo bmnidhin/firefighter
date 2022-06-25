@@ -27,4 +27,5 @@ https://us-west-2.console.aws.amazon.com/iot/home?region=us-west-2#/connectdevic
 ``pynt webuiserver``
 
 # Raspi
+-  Find pi IP using VNC
 -  ssh pi@192.168.1.55
